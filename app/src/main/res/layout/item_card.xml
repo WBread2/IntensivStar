@@ -54,5 +54,6 @@
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:ignore="RtlSymmetry"
         tools:itemCount="4"
-        tools:listitem="@layout/item_with_text" />
+        tools:listitem="@layout/item_with_text"
+        />
 </LinearLayout>
