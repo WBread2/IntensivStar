@@ -1,13 +1,68 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#2c3848"
     tools:context="ru.mikhailskiy.intensiv.ui.movie_details.MovieDetailsFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
-        android:layout_width="match_parent"
+    <LinearLayout
         android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        >
+        <ImageView
+            android:id="@+id/ivPoster"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:scaleType="centerCrop"
+            android:layout_weight="0.394"
+            />
 
-</FrameLayout>
+        <RelativeLayout
+            android:layout_height="0dp"
+            android:layout_width="match_parent"
+            android:layout_weight="0.606"
+            >
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="29dp"
+                android:layout_marginTop="26dp"
+                android:textColor="#ffffff"
+                android:lineSpacingExtra="9sp"
+                android:textSize="23sp"
+                tools:text="@string/app_name"
+                />
+
+        </RelativeLayout>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_marginTop="48dp"
+        >
+        <ImageView
+            android:id="@+id/ivBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_left_arrow"
+            android:layout_marginStart="29dp"
+            />
+
+        <ImageView
+            android:id="@+id/ivHeart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:scaleType="fitCenter"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_heart"
+            android:layout_marginEnd="29dp"
+            />
+
+    </RelativeLayout>
+
+</RelativeLayout>

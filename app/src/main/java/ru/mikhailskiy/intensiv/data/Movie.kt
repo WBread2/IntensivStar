@@ -18,8 +18,6 @@ data class Movie(
     val originalLanguage: String?,
     @SerializedName("title", alternate=["name"])
     var title: String?,
-    @SerializedName("backdrop_path")
-    val backdropPath: String?,
     @SerializedName("popularity")
     val popularity: Double?,
     @SerializedName("vote_count")
@@ -31,5 +29,8 @@ data class Movie(
 ) {
     @SerializedName("poster_path")
     var posterPath: String? = null
+        get() = "https://image.tmdb.org/t/p/w500$field"
+    @SerializedName("backdrop_path")
+    var backdropPath: String? = null
         get() = "https://image.tmdb.org/t/p/w500$field"
 }

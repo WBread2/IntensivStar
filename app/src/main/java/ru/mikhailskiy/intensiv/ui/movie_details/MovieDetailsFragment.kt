@@ -1,26 +1,20 @@
 package ru.mikhailskiy.intensiv.ui.movie_details
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.android.synthetic.main.feed_fragment.*
-import kotlinx.android.synthetic.main.feed_header.*
-import kotlinx.android.synthetic.main.search_toolbar.view.*
+import androidx.fragment.app.Fragment
+import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.movie_details_fragment.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import ru.mikhailskiy.intensiv.BuildConfig
 import ru.mikhailskiy.intensiv.R
 import ru.mikhailskiy.intensiv.data.Movie
-import ru.mikhailskiy.intensiv.data.MoviesResponse
 import ru.mikhailskiy.intensiv.network.MovieApiClient
-import ru.mikhailskiy.intensiv.ui.afterTextChanged
 import ru.mikhailskiy.intensiv.ui.feed.FeedFragment
-import ru.mikhailskiy.intensiv.ui.feed.MainCardContainer
-import ru.mikhailskiy.intensiv.ui.feed.MovieItem
 import timber.log.Timber
 
 const val ARG_TITLE = "title"
@@ -70,6 +64,12 @@ class MovieDetailsFragment : Fragment() {
             ) {
 
                 val movieDetails = response.body()
+
+                tvTitle.setText(movieDetails?.title)
+
+                Picasso.get()
+                    .load(movieDetails?.backdropPath)
+                    .into(ivPoster)
 /*
                 Заполняем фрагмент данными
 

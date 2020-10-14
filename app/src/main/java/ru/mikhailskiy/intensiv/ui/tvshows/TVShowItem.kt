@@ -22,7 +22,7 @@ class TVShowItem(
         }
 
         Picasso.get()
-            .load(content.posterPath)
+            .load(content.backdropPath)
             .into(viewHolder.image_preview)
     }
 }
