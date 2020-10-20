@@ -9,6 +9,7 @@ import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import kotlinx.android.synthetic.main.search_toolbar.view.*
 import ru.mikhailskiy.intensiv.R
+import io.reactivex.Observable
 
 class SearchBar @JvmOverloads constructor(
     context: Context,
@@ -40,12 +41,15 @@ class SearchBar @JvmOverloads constructor(
         this.editText.setText("")
     }
 
+    val onTextChangedObservable by lazy { search_edit_text.onTextChangedObservable() }
+
     override fun onFinishInflate() {
         super.onFinishInflate()
         search_edit_text.hint = hint
         delete_text_button.setOnClickListener {
             search_edit_text.text.clear()
         }
+
     }
 
     override fun onAttachedToWindow() {

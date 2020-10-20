@@ -1,5 +1,6 @@
 package ru.mikhailskiy.intensiv.ui.tvshows
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -8,6 +9,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.feed_fragment.*
 import kotlinx.android.synthetic.main.feed_header.*
 import kotlinx.android.synthetic.main.search_toolbar.view.*
@@ -40,6 +43,7 @@ class TvShowsFragment : Fragment() {
         return inflater.inflate(R.layout.tv_shows_fragment, container, false)
     }
 
+    @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -50,34 +54,29 @@ class TvShowsFragment : Fragment() {
         //получаем идущие телешоу
         val getPopularTV = MovieApiClient.apiClient.getPopularTV(API_KEY, "ru")
 
-        getPopularTV.enqueue(object : Callback<MoviesResponse> {
+        getPopularTV
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe (
+                {response ->
+                    val popularTVs = response.results
 
-            override fun onFailure(call: Call<MoviesResponse>, error: Throwable) {
-                // Логируем ошибку
-                Timber.e(TvShowsFragment.TAG, error.toString())
-            }
-
-            override fun onResponse(
-                call: Call<MoviesResponse>,
-                response: Response<MoviesResponse>
-            ) {
-
-                val popularTVs = response.body()?.results
-
-                val popularTVsList1 =
-                    popularTVs!!.map {
-                        TVShowItem(it) { movie ->
+                    val popularTVsList1 =
+                        popularTVs.map {
+                            TVShowItem(it) { movie ->
 //                        openMovieDetails(movie)
-                        }
-                    }.toList()
+                            }
+                        }.toList()
 
-                tv_shows_recycler_view.adapter = adapter.apply {
-                    addAll(popularTVsList1)
+                    tv_shows_recycler_view.adapter = adapter.apply {
+                        addAll(popularTVsList1)
+                    }
+                },
+                { error ->
+                    // Логируем ошибку
+                    Timber.e(TAG, error.toString())
                 }
-
-            }
-        })
-
+            )
     }
 
     override fun onStop() {

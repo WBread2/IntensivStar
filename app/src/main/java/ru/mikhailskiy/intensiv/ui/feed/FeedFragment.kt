@@ -1,5 +1,6 @@
 package ru.mikhailskiy.intensiv.ui.feed
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -9,6 +10,8 @@ import androidx.navigation.navOptions
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.kotlinandroidextensions.GroupieViewHolder
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.feed_fragment.*
 import kotlinx.android.synthetic.main.feed_header.*
 import kotlinx.android.synthetic.main.search_toolbar.view.*
@@ -24,7 +27,9 @@ import ru.mikhailskiy.intensiv.network.MovieApiClient
 import ru.mikhailskiy.intensiv.ui.afterTextChanged
 import ru.mikhailskiy.intensiv.ui.movie_details.ARG_ID
 import ru.mikhailskiy.intensiv.ui.movie_details.ARG_TITLE
+import ru.mikhailskiy.intensiv.ui.onTextChangedObservable
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 
 class FeedFragment : Fragment() {
 
@@ -41,6 +46,7 @@ class FeedFragment : Fragment() {
         return inflater.inflate(R.layout.feed_fragment, container, false)
     }
 
+    @SuppressLint("CheckResult")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -48,13 +54,31 @@ class FeedFragment : Fragment() {
         movies_recycler_view.layoutManager = LinearLayoutManager(context)
         movies_recycler_view.adapter = adapter.apply { addAll(listOf()) }
 
+        search_toolbar
+            .onTextChangedObservable
+            .map { it.trim() }
+            .debounce(500, TimeUnit.MILLISECONDS)
+            .filter { it.isNotEmpty() }
+            .subscribe (
+                {
+                    Timber.d(it.toString())
+                    if (it.toString().length > 3) {
+                        openSearch(it.toString())
+                    }
+                },
+                {error ->
+                    Timber.e(TAG, error.toString())
+                }
+            )
+
+/*
         search_toolbar.search_edit_text.afterTextChanged {
             Timber.d(it.toString())
             if (it.toString().length > 3) {
                 openSearch(it.toString())
             }
         }
-
+*/
         fillNowPlayingMovies()
 
         fillUpcomingMovies()
@@ -62,109 +86,100 @@ class FeedFragment : Fragment() {
         fillPopularMovies()
     }
 
+    @SuppressLint("CheckResult")
     private fun fillNowPlayingMovies() {
         //получаем идущие фильмы
         val getNowPlayingMovies = MovieApiClient.apiClient.getNowPlayingMovies(API_KEY, "ru")
 
-        getNowPlayingMovies.enqueue(object : Callback<MoviesResponse> {
+        getNowPlayingMovies
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe (
+                {response ->
+                    val nowPlayingMovies = response.results
 
-            override fun onFailure(call: Call<MoviesResponse>, error: Throwable) {
-                // Логируем ошибку
-                Timber.e(TAG, error.toString())
-            }
-
-            override fun onResponse(
-                call: Call<MoviesResponse>,
-                response: Response<MoviesResponse>
-            ) {
-
-                val nowPlayingMovies = response.body()?.results
-
-                val nowPlayingMoviesList = listOf(
-                    MainCardContainer(
-                        R.string.now_playing,
-                        nowPlayingMovies!!.map {
-                            MovieItem(it) { movie ->
-                                openMovieDetails(movie)
-                            }
-                        }.toList()
+                    val nowPlayingMoviesList = listOf(
+                        MainCardContainer(
+                            R.string.now_playing,
+                            nowPlayingMovies.map {
+                                MovieItem(it) { movie ->
+                                    openMovieDetails(movie)
+                                }
+                            }.toList()
+                        )
                     )
-                )
 
-                movies_recycler_view.adapter = adapter.apply { addAll(nowPlayingMoviesList) }
-
-            }
-        })
+                    movies_recycler_view.adapter = adapter.apply { addAll(nowPlayingMoviesList) }
+                },
+                { error ->
+                    // Логируем ошибку
+                    Timber.e(TAG, error.toString())
+                }
+            )
     }
 
+    @SuppressLint("CheckResult")
     private fun fillUpcomingMovies() {
         //получаем будущие фильмы
         val getUpcomingMovies = MovieApiClient.apiClient.getUpcomingMovies(API_KEY, "ru")
 
-        getUpcomingMovies.enqueue(object : Callback<MoviesResponse> {
+        getUpcomingMovies
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe (
+                {response ->
+                    val upcomingMovies = response.results
 
-            override fun onFailure(call: Call<MoviesResponse>, error: Throwable) {
-                // Логируем ошибку
-                Timber.e(TAG, error.toString())
-            }
-
-            override fun onResponse(
-                call: Call<MoviesResponse>,
-                response: Response<MoviesResponse>
-            ) {
-
-                val upcomingMovies = response.body()?.results
-
-                val upcomingMoviesList = listOf(
-                    MainCardContainer(
-                        R.string.upcoming,
-                        upcomingMovies!!.map {
-                            MovieItem(it) { movie ->
-                                openMovieDetails(movie)
-                            }
-                        }.toList()
+                    val upcomingMoviesList = listOf(
+                        MainCardContainer(
+                            R.string.upcoming,
+                            upcomingMovies.map {
+                                MovieItem(it) { movie ->
+                                    openMovieDetails(movie)
+                                }
+                            }.toList()
+                        )
                     )
-                )
 
-                adapter.apply { addAll(upcomingMoviesList) }
-
-            }
-        })
+                    adapter.apply { addAll(upcomingMoviesList) }
+                },
+                { error ->
+                    // Логируем ошибку
+                    Timber.e(TAG, error.toString())
+                }
+            )
     }
 
+    @SuppressLint("CheckResult")
     private fun fillPopularMovies() {
         //получаем популярные фильмы
         val getPopularMovies = MovieApiClient.apiClient.getPopularMovies(API_KEY, "ru")
 
-        getPopularMovies.enqueue(object : Callback<MoviesResponse> {
+        getPopularMovies
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe (
+                {response ->
+                    val popularMovies = response.results
 
-            override fun onFailure(call: Call<MoviesResponse>, error: Throwable) {
-                // Логируем ошибку
-                Timber.e(TAG, error.toString())
-            }
-
-            override fun onResponse(
-                call: Call<MoviesResponse>,
-                response: Response<MoviesResponse>
-            ) {
-
-                val popularMovies = response.body()?.results
-
-                val popularMoviesList = listOf(
-                    MainCardContainer(
-                        R.string.popular,
-                        popularMovies!!.map {
-                            MovieItem(it) { movie ->
-                                openMovieDetails(movie)
-                            }
-                        }.toList()
+                    val popularMoviesList = listOf(
+                        MainCardContainer(
+                            R.string.popular,
+                            popularMovies.map {
+                                MovieItem(it) { movie ->
+                                    openMovieDetails(movie)
+                                }
+                            }.toList()
+                        )
                     )
-                )
 
-                adapter.apply { addAll(popularMoviesList) }
-
-            }
-        })
+                    adapter.apply { addAll(popularMoviesList) }
+                },
+                { error ->
+                    // Логируем ошибку
+                    Timber.e(TAG, error.toString())
+                }
+            )
     }
 
     private fun openMovieDetails(movie: Movie) {

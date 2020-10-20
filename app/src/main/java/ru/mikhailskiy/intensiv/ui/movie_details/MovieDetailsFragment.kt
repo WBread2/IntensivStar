@@ -1,12 +1,16 @@
 package ru.mikhailskiy.intensiv.ui.movie_details
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import com.squareup.picasso.Picasso
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.movie_details_fragment.*
+import kotlinx.android.synthetic.main.tv_shows_fragment.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -15,6 +19,8 @@ import ru.mikhailskiy.intensiv.R
 import ru.mikhailskiy.intensiv.data.Movie
 import ru.mikhailskiy.intensiv.network.MovieApiClient
 import ru.mikhailskiy.intensiv.ui.feed.FeedFragment
+import ru.mikhailskiy.intensiv.ui.tvshows.TVShowItem
+import ru.mikhailskiy.intensiv.ui.tvshows.TvShowsFragment
 import timber.log.Timber
 
 const val ARG_TITLE = "title"
@@ -47,35 +53,33 @@ class MovieDetailsFragment : Fragment() {
         fillMovieDetails()
     }
 
+    @SuppressLint("CheckResult")
     private fun fillMovieDetails() {
         //получаем детали фильма
-        val getMovie = MovieApiClient.apiClient.getMovie(mId!!, MovieDetailsFragment.API_KEY, "ru")
+        val getMovie = MovieApiClient.apiClient.getMovie(mId!!, API_KEY, "ru")
 
-        getMovie.enqueue(object : Callback<Movie> {
+        getMovie
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe (
+                {response ->
+                    val movieDetails = response
 
-            override fun onFailure(call: Call<Movie>, error: Throwable) {
-                // Логируем ошибку
-                Timber.e(MovieDetailsFragment.TAG, error.toString())
-            }
+                    tvTitle.setText(movieDetails?.title)
 
-            override fun onResponse(
-                call: Call<Movie>,
-                response: Response<Movie>
-            ) {
-
-                val movieDetails = response.body()
-
-                tvTitle.setText(movieDetails?.title)
-
-                Picasso.get()
-                    .load(movieDetails?.backdropPath)
-                    .into(ivPoster)
+                    Picasso.get()
+                        .load(movieDetails?.backdropPath)
+                        .into(ivPoster)
 /*
                 Заполняем фрагмент данными
 
 */
-            }
-        })
+                },
+                { error ->
+                    // Логируем ошибку
+                    Timber.e(TAG, error.toString())
+                }
+            )
     }
 
     companion object {
